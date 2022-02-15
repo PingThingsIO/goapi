@@ -130,7 +130,7 @@ func (fullFlags StateFlagsEnum) mapToCompactFlags() compactStateFlagsEnum {
 type CompactMeasurement struct {
 	Measurement
 	signalIndexCache         *SignalIndexCache
-	baseTimeOffsets          *[2]int64
+	baseTimeOffsets          [2]int64
 	includeTime              bool
 	useMillisecondResolution bool
 	timeIndex                int32
@@ -138,16 +138,17 @@ type CompactMeasurement struct {
 }
 
 // NewCompactMeasurement creates a new CompactMeasurement
-func NewCompactMeasurement(signalIndexCache *SignalIndexCache, includeTime, useMillisecondResolution bool, baseTimeOffsets *[2]int64) CompactMeasurement {
-	return CompactMeasurement{
+func NewCompactMeasurement(signalIndexCache *SignalIndexCache, includeTime, useMillisecondResolution bool, baseTimeOffsets [2]int64) CompactMeasurement {
+	cm := CompactMeasurement{
 		Measurement:              Measurement{},
 		signalIndexCache:         signalIndexCache,
-		baseTimeOffsets:          baseTimeOffsets,
 		includeTime:              includeTime,
 		useMillisecondResolution: useMillisecondResolution,
 		timeIndex:                0,
 		usingBaseTimeOffset:      false,
 	}
+	copy(cm.baseTimeOffsets[:], baseTimeOffsets[:])
+	return cm
 }
 
 // GetBinaryLength gets the binary byte length of a CompactMeasurement

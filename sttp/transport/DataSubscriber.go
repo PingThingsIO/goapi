@@ -1022,7 +1022,7 @@ func (ds *DataSubscriber) parseCompactMeasurements(signalIndexCache *SignalIndex
 	for i := 0; i < len(measurements); i++ {
 		if signalIndexCache.Count() > 0 {
 			// Deserialize compact measurement format
-			compactMeasurement := NewCompactMeasurement(signalIndexCache, includeTime, useMillisecondResolution, &ds.baseTimeOffsets)
+			compactMeasurement := NewCompactMeasurement(signalIndexCache, includeTime, useMillisecondResolution, ds.baseTimeOffsets)
 			bytesDecoded, err := compactMeasurement.Decode(data[index:])
 
 			if err != nil {
