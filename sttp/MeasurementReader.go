@@ -24,6 +24,8 @@
 package sttp
 
 import (
+	"context"
+
 	"github.com/sttp/goapi/sttp/transport"
 )
 
@@ -46,8 +48,13 @@ func newMeasurementReader(parent *Subscriber) *MeasurementReader {
 }
 
 // NextMeasurement blocks current thread until a new measurement arrives.
-func (mr *MeasurementReader) NextMeasurement() *transport.Measurement {
-	return <-mr.current
+func (mr *MeasurementReader) NextMeasurement(ctx context.Context) (*transport.Measurement, bool) {
+	select {
+	case <-ctx.Done():
+		return nil, true
+	case m := <-mr.current:
+		return m, false
+	}
 }
 
 func (mr *MeasurementReader) receivedNewMeasurements(measurements []transport.Measurement) {
