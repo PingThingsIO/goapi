@@ -752,6 +752,9 @@ func (sb *Subscriber) SetErrorMessageLogger(callback func(message string)) {
 // It is not intended for user-level diagnostics.
 func (sb *Subscriber) SetDeveloperLogger(l *slog.Logger) {
 	sb.log = l
+	if sb.ds != nil {
+		sb.ds.Log = l
+	}
 }
 
 // SetMetadataReceiver defines the callback that handles reception of the metadata response.
@@ -857,7 +860,7 @@ func (sb *Subscriber) traceCallback(callback func(), s string) {
 	then := time.Now()
 	callback()
 	d := time.Since(then)
-	sb.debug(fmt.Sprintf("callback %s called at %d, took %d ns", s, d, then.UnixNano()))
+	sb.debug(fmt.Sprintf("callback %s called at %d, took %d ns", s, then.UnixNano(), d))
 }
 
 func (sb *Subscriber) debug(s string) {
