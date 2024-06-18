@@ -181,10 +181,12 @@ func (sb *Subscriber) AdjustedValue(measurement *transport.Measurement) float64 
 // as false and AutoSubscribe as true, subscription will occur at successful connection.
 func (sb *Subscriber) Dial(address string, config *Config) error {
 	if sb.IsConnected() {
+		fmt.Printf("subscriber is already connected, cannot dial at this time\n")
 		return errors.New("subscriber is already connected; cannot dial at this time")
 	}
 
 	if sb.IsListening() {
+		fmt.Printf("subscriber is already listening, cannot dial at this time\n")
 		return errors.New("subscriber is listening for connections; cannot dial at this time")
 	}
 
@@ -259,6 +261,7 @@ func (sb *Subscriber) connect(hostname string, port uint16) error {
 	// Connect and subscribe to publisher
 	switch con.Connect(ds) {
 	case transport.ConnectStatus.Success:
+		fmt.Printf("connected successfully, invoking handleConnect()")
 		sb.handleConnect()
 	case transport.ConnectStatus.Failed:
 		err = errors.New("all connection attempts failed")
@@ -285,6 +288,8 @@ func (sb *Subscriber) Listen(address string, config *Config) error {
 		return errors.New("subscriber is already connected; cannot listen at this time")
 	}
 
+	fmt.Printf("Listen\n")
+
 	networkInterface, portname, err := net.SplitHostPort(address)
 
 	if err != nil {
@@ -309,6 +314,7 @@ func (sb *Subscriber) Listen(address string, config *Config) error {
 }
 
 func (sb *Subscriber) listen(port uint16, networkInterface string) error {
+	fmt.Printf("s.listen\n")
 	if sb.config == nil {
 		panic("Internal Config instance has not been initialized. Make sure to use NewSubscriber.")
 	}
@@ -387,6 +393,7 @@ func (sb *Subscriber) RequestMetadata() {
 //
 // Settings parameter controls subscription related settings, set value to nil for default values.
 func (sb *Subscriber) Subscribe(filterExpression string, settings *Settings) {
+	fmt.Printf("Subscribe\n")
 	ds := sb.dataSubscriber()
 	sub := ds.Subscription()
 
@@ -420,7 +427,10 @@ func (sb *Subscriber) Subscribe(filterExpression string, settings *Settings) {
 	sub.ExtraConnectionStringParameters = settings.ExtraConnectionStringParameters
 
 	if ds.IsConnected() {
+		fmt.Printf("Subscribed, connecting\n")
 		ds.Subscribe()
+	} else {
+		fmt.Printf("Not connected, not subscribing!\n")
 	}
 }
 
@@ -485,6 +495,7 @@ func (sb *Subscriber) handleConnect() {
 	sb.beginCallbackSync()
 
 	if sb.connectionEstablishedReceiver != nil {
+		fmt.Printf("connection established callback\n")
 		sb.connectionEstablishedReceiver()
 	}
 
