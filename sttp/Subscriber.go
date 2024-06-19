@@ -688,7 +688,6 @@ func (sb *Subscriber) handleProcessingComplete(message string) {
 
 	if sb.historicalReadCompleteReceiver != nil {
 		sb.traceCallback(sb.historicalReadCompleteReceiver, "calling historicalReadCompleteReceiver")
-		sb.historicalReadCompleteReceiver()
 	}
 
 	sb.endCallbackSync()

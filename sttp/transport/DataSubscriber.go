@@ -992,6 +992,8 @@ func (ds *DataSubscriber) handleFailed(commandCode ServerCommandEnum, data []byt
 }
 
 func (ds *DataSubscriber) handleMetadataRefresh(data []byte) {
+	ds.Log.Debug("metadata refresh", "metadata_payload", data, "metadata_bytes", len(data))
+
 	ds.BeginCallbackSync()
 	metadataReceivedCallback := ds.MetadataReceivedCallback
 	ds.EndCallbackSync()
