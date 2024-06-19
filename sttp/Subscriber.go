@@ -521,6 +521,8 @@ func (sb *Subscriber) handleReconnect(ds *transport.DataSubscriber) {
 
 func (sb *Subscriber) handleMetadataReceived(metadata []byte) {
 	sb.debug("new metadata received")
+	sb.debug(string(metadata))
+
 	parseStarted := time.Now()
 	dataSet := data.NewDataSet()
 	err := dataSet.ParseXml(metadata)
