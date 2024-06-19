@@ -523,6 +523,9 @@ func (sb *Subscriber) handleMetadataReceived(metadata []byte) {
 	sb.debug("new metadata received")
 	sb.debug(string(metadata))
 
+	pmMetadataRefreshes.Inc()
+	pmMetadataRefreshPayloadSizes.Observe(float64(len(metadata)))
+
 	parseStarted := time.Now()
 	dataSet := data.NewDataSet()
 	err := dataSet.ParseXml(metadata)
@@ -530,6 +533,7 @@ func (sb *Subscriber) handleMetadataReceived(metadata []byte) {
 	if err == nil {
 		sb.loadMeasurementMetadata(dataSet)
 	} else {
+		pmMetadataRefreshErrors.Inc()
 		sb.ErrorMessage("Failed to parse received XML metadata: " + err.Error())
 	}
 
@@ -546,6 +550,8 @@ func (sb *Subscriber) handleMetadataReceived(metadata []byte) {
 	if sb.config.AutoRequestMetadata && sb.config.AutoSubscribe {
 		sb.dataSubscriber().Subscribe()
 	}
+
+	pmMetadataRefreshDurations.Observe(float64(time.Since(parseStarted).Milliseconds()))
 }
 
 func (sb *Subscriber) loadMeasurementMetadata(dataSet *data.DataSet) {
