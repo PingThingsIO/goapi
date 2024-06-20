@@ -495,7 +495,7 @@ func (sb *Subscriber) handleConnect() {
 	sb.beginCallbackSync()
 
 	if sb.connectionEstablishedReceiver != nil {
-		fmt.Printf("connection established callback\n")
+		fmt.Printf("connection established callback, version expected\n")
 		sb.connectionEstablishedReceiver()
 	}
 
