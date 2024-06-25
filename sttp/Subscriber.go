@@ -507,7 +507,10 @@ func (sb *Subscriber) handleConnect() {
 	if sb.config.AutoRequestMetadata {
 		sb.RequestMetadata()
 	} else if sb.config.AutoSubscribe {
-		sb.dataSubscriber().Subscribe()
+		fmt.Println("Invoking DS.Subscribe()")
+		if err := sb.dataSubscriber().Subscribe(); err != nil {
+			fmt.Printf("Failed to subscribe: %v\n", err)
+		}
 	}
 }
 

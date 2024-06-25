@@ -496,6 +496,7 @@ func (ds *DataSubscriber) Subscribe() error {
 	}
 
 	if ds.subscription.UdpDataChannel {
+		fmt.Println("has udp data channel")
 		udpPort := strconv.Itoa(int(ds.subscription.DataChannelLocalPort))
 		udpAddr, err := net.ResolveUDPAddr("udp", ":"+udpPort)
 
@@ -515,6 +516,8 @@ func (ds *DataSubscriber) Subscribe() error {
 		parameterBuilder.WriteString(";dataChannel={localport=")
 		parameterBuilder.WriteString(udpPort)
 		parameterBuilder.WriteString("}")
+	} else {
+	fmt.Println("no udp channel")
 	}
 
 	if len(ds.subscription.StartTime) > 0 {
