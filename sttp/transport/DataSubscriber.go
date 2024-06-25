@@ -1473,6 +1473,7 @@ func (ds *DataSubscriber) SendServerCommandWithMessage(commandCode ServerCommand
 
 // SendServerCommandWithPayload sends a server command code to the DataPublisher along with the specified data payload.
 func (ds *DataSubscriber) SendServerCommandWithPayload(commandCode ServerCommandEnum, data []byte) {
+	fmt.Printf("Sending server command %d, payload present %v", commandCode, data != nil)
 	if ds.connected.IsNotSet() {
 		return
 	}
