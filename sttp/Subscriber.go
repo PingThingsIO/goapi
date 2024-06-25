@@ -427,7 +427,7 @@ func (sb *Subscriber) Subscribe(filterExpression string, settings *Settings) {
 	sub.ExtraConnectionStringParameters = settings.ExtraConnectionStringParameters
 
 	if ds.IsConnected() {
-		fmt.Printf("Subscribed, connecting\n")
+		fmt.Printf("Connected, subscribing\n")
 		ds.Subscribe()
 	} else {
 		fmt.Printf("Not connected, not subscribing!\n")

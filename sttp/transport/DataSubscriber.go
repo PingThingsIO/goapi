@@ -899,6 +899,8 @@ func (ds *DataSubscriber) processServerResponse(buffer []byte) {
 		ds.validated.Set()
 	}
 
+	fmt.Printf("received code %d to command %d\n", responseCode, commandCode)
+
 	switch responseCode {
 	case ServerResponse.Succeeded:
 		ds.handleSucceeded(commandCode, data)
