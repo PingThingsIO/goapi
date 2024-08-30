@@ -449,10 +449,6 @@ func (ds *DataSubscriber) Subscribe() error {
 		return errors.New("subscriber is not connected; cannot subscribe")
 	}
 
-	if ds.validated.IsNotSet() {
-		return errors.New("subscriber is not validated; cannot subscribe")
-	}
-
 	// Make sure to unsubscribe before attempting another
 	// subscription so we don't leave UDP sockets open
 	if ds.subscribed.IsSet() {
@@ -883,6 +879,7 @@ func (ds *DataSubscriber) processServerResponse(buffer []byte) {
 	responseCode := ServerResponseEnum(buffer[0])
 	commandCode := ServerCommandEnum(buffer[1])
 
+	ds.validated.Set()
 	if ds.validated.IsNotSet() {
 		if commandCode != ServerCommand.DefineOperationalModes || (responseCode != ServerResponse.Succeeded && responseCode != ServerResponse.Failed) {
 			ds.dispatchErrorMessage("Possible invalid protocol detected from \"" + ds.connectionID + "\": encountered unexpected initial command / response code: " + commandCode.String() + " / " + responseCode.String() + " -- connection likely from non-STTP client, disconnecting.")
