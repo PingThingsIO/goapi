@@ -25,6 +25,7 @@ package data
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -153,6 +154,8 @@ func (ds *DataSet) String() string {
 // ParseXml loads the DataSet from the XML in the specified buffer.
 func (ds *DataSet) ParseXml(data []byte) error {
 	var doc xml.XmlDocument
+
+	log.Printf("received XML metadata: \n%s\n", data)
 
 	if err := doc.LoadXml(data); err != nil {
 		return err
