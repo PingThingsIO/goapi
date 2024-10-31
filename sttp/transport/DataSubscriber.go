@@ -162,6 +162,8 @@ type DataSubscriber struct {
 	tsscLastOOSReport       time.Time
 	tsscLastOOSReportMutex  sync.Mutex
 
+	MeasurementPool sync.Pool
+
 	bufferBlockExpectedSequenceNumber uint32
 	bufferBlockCache                  []BufferBlock
 }
@@ -188,6 +190,10 @@ func NewDataSubscriber() *DataSubscriber {
 		STTPVersionInfo:          version.STTPVersion,
 		STTPUpdatedOnInfo:        version.STTPUpdatedOn,
 		signalIndexCache:         [2]*SignalIndexCache{NewSignalIndexCache(), NewSignalIndexCache()},
+	}
+
+	ds.MeasurementPool.New = func() any {
+		return make([]Measurement, 64)
 	}
 
 	ds.validated.Set()
@@ -1219,7 +1225,12 @@ func (ds *DataSubscriber) handleDataPacket(data []byte) {
 	}
 
 	count := binary.BigEndian.Uint32(data)
-	measurements := make([]Measurement, count)
+	measurements := ds.MeasurementPool.Get().([]Measurement)
+	if uint32(cap(measurements)) < count {
+		measurements = make([]Measurement, count)
+	} else {
+		measurements = measurements[:count]
+	}
 	var cacheIndex int
 
 	if dataPacketFlags&DataPacketFlags.CacheIndex > 0 {
