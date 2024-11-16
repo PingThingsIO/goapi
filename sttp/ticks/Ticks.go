@@ -38,8 +38,7 @@ type Ticks uint64
 
 // Equivalent to UTC time 01/01/0001 00:00:00.000.
 const Min Ticks = 0
-// TODO: this comment is definitely wrong.
-// Max is the maximum value for Ticks. It represents UTC time 12/31/1999 11:59:59.999.
+// Max is the maximum value for Ticks. It represents UTC time 12/31/9999 11:59:59.999.
 const Max Ticks = 3155378975999999999
 
 // Ticks are every 100ns == 0.1us
