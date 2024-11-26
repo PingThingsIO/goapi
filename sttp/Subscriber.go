@@ -100,6 +100,11 @@ func (sb *Subscriber) dataSubscriber() *transport.DataSubscriber {
 	return sb.ds
 }
 
+func (sb *Subscriber) PutMeasurementSlice(m *[]transport.Measurement) {
+	*m = (*m)[:0]
+	sb.ds.MeasurementPool.Put(m)
+}
+
 // IsConnected determines if Subscriber is currently connected to a data publisher.
 // When Subscriber is listening for connections, this method will only return true
 // once a data publisher successfully connects to the listening socket.
@@ -776,7 +781,7 @@ func (sb *Subscriber) SetConfigurationChangedReceiver(callback func()) {
 
 // SetNewMeasurementsReceiver defines the callback that handles reception of new measurements.
 // Assignment will take effect immediately, even while subscription is active.
-func (sb *Subscriber) SetNewMeasurementsReceiver(callback func(measurements []transport.Measurement)) {
+func (sb *Subscriber) SetNewMeasurementsReceiver(callback func(measurements *[]transport.Measurement)) {
 	ds := sb.dataSubscriber()
 	ds.BeginCallbackAssignment()
 	defer ds.EndCallbackAssignment()
