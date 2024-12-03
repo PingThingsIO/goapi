@@ -86,7 +86,7 @@ func (dr *DataRow) validateColumnType(columnIndex, targetType int, read bool) (*
 		return nil, fmt.Errorf("cannot %s \"%s\" value %s DataColumn \"%s\" for table \"%s\", column data type is \"%s\"", action, DataTypeEnum(targetType).String(), preposition, column.Name(), dr.parent.Name(), column.Type().String())
 	}
 
-	if !read && column.Computed() {
+	if !read && column.computed {
 		return nil, errors.New("cannot assign value to DataColumn \"" + column.Name() + "\" for table \"" + dr.parent.Name() + "\", column is computed with an expression")
 	}
 
@@ -472,6 +472,14 @@ func convertFromDateTime(value time.Time, targetType DataTypeEnum) (interface{},
 	}
 }
 
+// Equivalent to Value, but asserts that the value is not computed, and
+// that the column index is valid. May crash if these assumptions are violated.
+// If the column comes from getColumnIndex, and is known to not be
+// computed, this should be safe.
+func (dr *DataRow) ValueFast(columnIndex int) (interface{}, error) {
+	return dr.values[columnIndex], nil
+}
+
 // Value reads the record value at the specified columnIndex.
 func (dr *DataRow) Value(columnIndex int) (interface{}, error) {
 	column, err := dr.validateColumnType(columnIndex, -1, true)
@@ -480,7 +488,7 @@ func (dr *DataRow) Value(columnIndex int) (interface{}, error) {
 		return nil, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		return dr.getComputedValue(column)
 	}
 
@@ -751,7 +759,7 @@ func (dr *DataRow) StringValue(columnIndex int) (string, bool, error) {
 		return "", false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -797,7 +805,7 @@ func (dr *DataRow) BooleanValue(columnIndex int) (bool, bool, error) {
 		return false, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -843,7 +851,7 @@ func (dr *DataRow) DateTimeValue(columnIndex int) (time.Time, bool, error) {
 		return time.Time{}, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -889,7 +897,7 @@ func (dr *DataRow) SingleValue(columnIndex int) (float32, bool, error) {
 		return 0.0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -935,7 +943,7 @@ func (dr *DataRow) DoubleValue(columnIndex int) (float64, bool, error) {
 		return 0.0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -981,7 +989,7 @@ func (dr *DataRow) DecimalValue(columnIndex int) (decimal.Decimal, bool, error) 
 		return decimal.Zero, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1027,7 +1035,7 @@ func (dr *DataRow) GuidValue(columnIndex int) (guid.Guid, bool, error) {
 		return guid.Guid{}, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1073,7 +1081,7 @@ func (dr *DataRow) Int8Value(columnIndex int) (int8, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1119,7 +1127,7 @@ func (dr *DataRow) Int16Value(columnIndex int) (int16, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1165,7 +1173,7 @@ func (dr *DataRow) Int32Value(columnIndex int) (int32, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1211,7 +1219,7 @@ func (dr *DataRow) Int64Value(columnIndex int) (int64, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1257,7 +1265,7 @@ func (dr *DataRow) UInt8Value(columnIndex int) (uint8, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1303,7 +1311,7 @@ func (dr *DataRow) UInt16Value(columnIndex int) (uint16, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1349,7 +1357,7 @@ func (dr *DataRow) UInt32Value(columnIndex int) (uint32, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
@@ -1395,7 +1403,7 @@ func (dr *DataRow) UInt64Value(columnIndex int) (uint64, bool, error) {
 		return 0, false, err
 	}
 
-	if column.Computed() {
+	if column.computed {
 		value, err := dr.getComputedValue(column)
 
 		if err != nil {
