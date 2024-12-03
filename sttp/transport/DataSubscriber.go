@@ -111,7 +111,7 @@ type DataSubscriber struct {
 	ConfigurationChangedCallback func()
 
 	// NewMeasurementsCallback is called when DataSubscriber receives a set of new measurements from the DataPublisher.
-	NewMeasurementsCallback func([]Measurement)
+	NewMeasurementsCallback func(*[]Measurement)
 
 	// NewBufferBlocksCallback is called when DataSubscriber receives a set of new buffer block measurements from the DataPublisher.
 	NewBufferBlocksCallback func([]BufferBlock)
@@ -162,6 +162,8 @@ type DataSubscriber struct {
 	tsscLastOOSReport       time.Time
 	tsscLastOOSReportMutex  sync.Mutex
 
+	MeasurementPool sync.Pool
+
 	bufferBlockExpectedSequenceNumber uint32
 	bufferBlockCache                  []BufferBlock
 }
@@ -189,6 +191,8 @@ func NewDataSubscriber() *DataSubscriber {
 		STTPUpdatedOnInfo:        version.STTPUpdatedOn,
 		signalIndexCache:         [2]*SignalIndexCache{NewSignalIndexCache(), NewSignalIndexCache()},
 	}
+
+	ds.validated.Set()
 
 	ds.connectionTerminationThread = thread.NewThread(func() {
 		ds.disconnect(false, true, false)
@@ -1216,7 +1220,18 @@ func (ds *DataSubscriber) handleDataPacket(data []byte) {
 	}
 
 	count := binary.BigEndian.Uint32(data)
-	measurements := make([]Measurement, count)
+	var measurements *[]Measurement
+	if mptr := ds.MeasurementPool.Get(); mptr == nil {
+		m := make([]Measurement, count)
+		measurements = &m
+	} else {
+		measurements = mptr.(*[]Measurement)
+		if uint32(cap(*measurements)) < count {
+			*measurements = make([]Measurement, count)
+		} else {
+			*measurements = (*measurements)[:count]
+		}
+	}
 	var cacheIndex int
 
 	if dataPacketFlags&DataPacketFlags.CacheIndex > 0 {
@@ -1228,9 +1243,9 @@ func (ds *DataSubscriber) handleDataPacket(data []byte) {
 	ds.signalIndexCacheMutex.Unlock()
 
 	if compressed {
-		ds.parseTSSCMeasurements(signalIndexCache, data[4:], measurements)
+		ds.parseTSSCMeasurements(signalIndexCache, data[4:], *measurements)
 	} else {
-		ds.parseCompactMeasurements(signalIndexCache, data[4:], measurements)
+		ds.parseCompactMeasurements(signalIndexCache, data[4:], *measurements)
 	}
 
 	ds.BeginCallbackSync()
