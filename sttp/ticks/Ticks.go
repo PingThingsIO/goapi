@@ -16,6 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
+//  12.01.2024 - Noam Preil
+//       Add functions for working with Unix nanoseconds directly.
 //  09/09/2021 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
@@ -28,17 +30,16 @@ import (
 )
 
 // Ticks is a 64-bit integer used to designate time in STTP. The value represents the number of 100-nanosecond intervals
-// that have elapsed since 12:00:00 midnight, January 1, 0001 UTC, Gregorian calendar. A single tick represents one hundred
-// nanoseconds, or one ten-millionth of a second. There are 10,000 ticks in a millisecond and 10 million ticks in a second.
+// that have elapsed since 12:00:00 midnight, January 1, 0001 UTC, in the Gregorian calendar. A single tick represents 100ns.
 // Only bits 01 to 62 (0x3FFFFFFFFFFFFFFF) are used to represent the timestamp value. Bit 64 (0x8000000000000000) is used
-// to denote leap second, i.e., second 60, where actual second value would remain at 59. Bit 63 (0x4000000000000000) is
-// used to denote leap second direction, 0 for add, 1 for delete.
+// to denote a leap second, and bit 63 (0x4000000000000000) is used to denote the leap second's direction, 0 for add, 1 for delete.
+// Leap seconds are exposed, but are silently discarded upon conversion to Go or Unix timestamps.
 type Ticks uint64
 
 // Min is the minimum value for Ticks. It represents UTC time 01/01/0001 00:00:00.000.
 const Min Ticks = 0
 
-// Max is the maximum value for Ticks. It represents UTC time 12/31/1999 11:59:59.999.
+// Max is the maximum value for Ticks. It represents UTC time 12/31/9999 11:59:59.999.
 const Max Ticks = 3155378975999999999
 
 // PerSecond is the number of Ticks that occur in a second.
@@ -88,9 +89,14 @@ func ToTime(ticks Ticks) time.Time {
 	return time.Unix(0, int64((ticks-UnixBaseOffset)&ValueMask)*100).UTC()
 }
 
+// Converts a unix nanoseconds timestamp into a Ticks value.
+func FromUnixNano(ns uint64) Ticks {
+	return Ticks(ns / 100) + UnixBaseOffset
+}
+
 // FromTime converts a standard Go Time value to a Ticks value.
 func FromTime(time time.Time) Ticks {
-	return (Ticks(time.UnixNano()/100) + UnixBaseOffset) & ValueMask
+	return FromUnixNano(uint64(time.UnixNano()))
 }
 
 // IsLeapSecond determines if the deserialized Ticks value represents a leap second, i.e., second 60.
@@ -135,17 +141,12 @@ func UtcNow() Ticks {
 
 // ToTime converts a Ticks value to standard Go Time value.
 func (t Ticks) ToTime() time.Time {
-	return ToTime(t)
+	return time.Unix(0, int64((t-UnixBaseOffset)&ValueMask)*100).UTC()
 }
 
-// IsLeapSecond determines if the deserialized Ticks value represents a leap second, i.e., second 60.
-func (t Ticks) IsLeapSecond() bool {
-	return IsLeapSecond(t)
-}
-
-// SetLeapSecond flags a Ticks value to represent a leap second, i.e., second 60, before wire serialization.
-func (t Ticks) SetLeapSecond() Ticks {
-	return SetLeapSecond(t)
+// Converts the ticks value into a Unix nanoseconds timestamp
+func (t Ticks) ToUnixNano() uint64 {
+	return uint64(((t & ValueMask) - UnixBaseOffset) * 100)
 }
 
 // String returns the string form of a Ticks value, i.e., a standard date/time value. See TimeFormat.
@@ -156,4 +157,24 @@ func (t Ticks) String() string {
 // ShortTime returns the short time string form of a Ticks value.
 func (t Ticks) ShortTime() string {
 	return t.ToTime().Format(ShortTimeFormat)
+}
+
+func (t Ticks) IsLeapSecond() bool {
+	return (t&LeapSecondFlag) != 0
+}
+
+func (t *Ticks) SetLeapSecond(){
+	*t |= LeapSecondFlag
+}
+
+func (t *Ticks) SetLeapSecondDirection(negative bool) {
+	if negative {
+		*t |= LeapSecondDirection
+	} else {
+		*t &= ^LeapSecondDirection
+	}
+}
+
+func (t Ticks) IsNegativeLeapSecond() bool {
+	return t.IsLeapSecond() && (t&LeapSecondDirection) != 0
 }
