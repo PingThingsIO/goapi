@@ -77,7 +77,8 @@ func (sub *AdvancedSubscriber) subscriptionUpdated(signalIndexCache *transport.S
 	sub.StatusMessage(fmt.Sprintf("Received signal index cache with %d mappings", signalIndexCache.Count()))
 }
 
-func (sub *AdvancedSubscriber) receivedNewMeasurements(measurements []transport.Measurement) {
+func (sub *AdvancedSubscriber) receivedNewMeasurements(measurements *[]transport.Measurement) {
+	defer sub.PutMeasurementSlice(measurements)
 	if time.Since(sub.lastMessage).Seconds() < 5.0 {
 		return
 	}
@@ -94,12 +95,12 @@ func (sub *AdvancedSubscriber) receivedNewMeasurements(measurements []transport.
 	message.WriteString(format.UInt64(sub.TotalMeasurementsReceived()))
 	message.WriteString(" measurements received so far...\n")
 	message.WriteString("Timestamp: ")
-	message.WriteString(measurements[0].Timestamp.String())
+	message.WriteString((*measurements)[0].Timestamp.String())
 	message.WriteRune('\n')
 	message.WriteString("\tID\tSignal ID\t\t\t\tValue\n")
 
-	for i := 0; i < len(measurements); i++ {
-		measurement := measurements[i]
+	for i := 0; i < len((*measurements)); i++ {
+		measurement := (*measurements)[i]
 		metadata := sub.Metadata(&measurement)
 
 		message.WriteRune('\t')
